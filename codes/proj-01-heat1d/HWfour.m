@@ -81,37 +81,6 @@ for n_el = 2 : 2 : 16                             % hw4 2
 
     disp = [d_temp; g];
 
-    n_sam = 20;
-    xi_sam = -1 : (2/n_sam) : 1;
-
-    x_sam = zeros(n_el * n_sam + 1, 1);
-    y_sam = x_sam; % store the exact solution value at sampling points
-    u_sam = x_sam; % store the numerical solution value at sampling pts
-
-    for ee = 1 : n_el
-        x_ele = x_coor( IEN(ee, :) );
-        u_ele = disp( IEN(ee, :) );
-
-        if ee == n_el
-            n_sam_end = n_sam+1;
-        else
-            n_sam_end = n_sam;
-        end
-
-        for ll = 1 : n_sam_end
-            x_l = 0.0;
-            u_l = 0.0;
-            for aa = 1 : n_en
-                x_l = x_l + x_ele(aa) * PolyShape(pp, aa, xi_sam(ll), 0);
-                u_l = u_l + u_ele(aa) * PolyShape(pp, aa, xi_sam(ll), 0);
-            end
-
-            x_sam( (ee-1)*n_sam + ll ) = x_l;
-            u_sam( (ee-1)*n_sam + ll ) = u_l;
-            y_sam( (ee-1)*n_sam + ll ) = x_l^5;
-        end
-    end
-
 
     % from here begin
     for nel = 1 : n_el
@@ -125,8 +94,8 @@ for n_el = 2 : 2 : 16                             % hw4 2
                 integ1 = integ1 + u_ele(aa) * PolyShape(pp, aa, xi(qua), 0);
                 integ2 = integ2 + u_ele(aa) * PolyShape(pp, aa, xi(qua), 1);
             end
-            eL21(n_el/2, 1) = eL21(n_el/2, 1) + weighti_nel(qua) * (integ1 - xi_nel(qua)^5)^2;
-            eH11(n_el/2, 1) = eH11(n_el/2, 1) + weighti_nel(qua) * (integ2 - 5 * xi_nel(qua)^4)^2;
+            eL21(n_el/2) = eL21(n_el/2) + weighti_nel(qua) * (integ1 - xi_nel(qua)^5)^2;
+            eH11(n_el/2) = eH11(n_el/2) + weighti_nel(qua) * (integ2 - 5 * xi_nel(qua)^4)^2;
         end
         if nel == n_el
             eL21(n_el/2, 1) = eL21(n_el/2, 1) ^ 0.5;
