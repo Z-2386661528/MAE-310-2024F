@@ -6,7 +6,7 @@ g = 1.0;           % u    = g  at x = 1
 h = 0.0;           % -u,x = h  at x = 0
 
 % Setup the mesh
-pp   = 1;              % polynomial degree
+pp   = 2;              % polynomial degree
 n_en = pp + 1;         % number of element or local nodes
 n_int = 10;
 [xi, weight] = Gauss(n_int, -1, 1);
@@ -119,14 +119,15 @@ end
     end
 end
 
+
 eL2 = eL21 / eL22;    %L2误差
 eH1 = eH11 / eH12;    %H1误差
 
 
-plot(log(2 : 2 : 16), log(eL2), '-r','LineWidth',3);
+plot(log((2 : 2 : 16).^-1), log(eL2), '-r','LineWidth',3);
 hold on;
 grid on;
-plot(log(2 : 2 : 16), log(eH1), '-k','LineWidth',3);
+plot(log((2 : 2 : 16).^-1), log(eH1), '-k','LineWidth',3);
 
 
 
