@@ -100,14 +100,22 @@ end
 
     for nel = 1 : n_el
         [xi_nel, weighti_nel] = Gauss(n_int, (nel - 1) /n_el , nel / n_el);     %每个节点内部的积分要在哪里，节点左右由间距表示
-        x_ele = x_coor( IEN(nel, :) );
         u_ele = disp( IEN(nel, :) );
+
+
+
         for qua = 1 : n_int
+            dx_dxi = 0.0;
+            for aa = 1 : n_en
+                dx_dxi = dx_dxi + x_ele(aa) * PolyShape(pp, aa, xi(qua), 1);
+            end
+            dxi_dx = 1.0 / dx_dxi;
+            
             integ1 = 0.0;
             integ2 = 0.0;
             for aa = 1 : n_en
                 integ1 = integ1 + u_ele(aa) * PolyShape(pp, aa, xi(qua), 0);    %在内部积分
-                integ2 = integ2 + u_ele(aa) * PolyShape(pp, aa, xi(qua), 1);
+                integ2 = integ2 + u_ele(aa) * PolyShape(pp, aa, xi(qua), 1) * dxi_dx;
             end
             eL21(n_el/2) = eL21(n_el/2) + weighti_nel(qua) * (integ1 - xi_nel(qua)^5)^2;
             eH11(n_el/2) = eH11(n_el/2) + weighti_nel(qua) * (integ2 - 5 * xi_nel(qua)^4)^2;
@@ -124,10 +132,10 @@ eL2 = eL21 / eL22;    %L2误差
 eH1 = eH11 / eH12;    %H1误差
 
 
-plot(log((2 : 2 : 16).^-1), log(eL2), '-r','LineWidth',3);
+plot(log(1./(2 : 2 : 16)), log(eL2), '-r','LineWidth',3);
 hold on;
 grid on;
-plot(log((2 : 2 : 16).^-1), log(eH1), '-k','LineWidth',3);
+plot(log(1./(2 : 2 : 16)), log(eH1), '-k','LineWidth',3);
 
 
 
