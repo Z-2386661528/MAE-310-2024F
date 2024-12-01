@@ -6,7 +6,7 @@ g = 1.0;           % u    = g  at x = 1
 h = 0.0;           % -u,x = h  at x = 0
 
 % Setup the mesh
-pp   = 1;              % polynomial degree
+pp   = 3;              % polynomial degree
 n_en = pp + 1;         % number of element or local nodes
 n_int = 10;
 [xi, weight] = Gauss(n_int, -1, 1);
@@ -100,16 +100,18 @@ for n_el = 2 : 2 : 16                             % hw4 2
 
         for qua = 1 : n_int
             dx_dxi = 0.0;
-            for aa = 1 : n_en
-                dx_dxi = dx_dxi + x_ele(aa) * PolyShape(pp, aa, xi(qua), 1);
+            for ee = 1 : n_en
+                dx_dxi = dx_dxi + x_ele(ee) * PolyShape(pp, ee, xi(qua), 1);
             end
             dxi_dx = 1.0 / dx_dxi;
             integ1 = 0.0;
-            integ2 = 0.0;
+            integ2 = 0.0;                                                       %再算一遍dxi/dx，下边要用
+
             for aa = 1 : n_en
                 integ1 = integ1 + u_ele(aa) * PolyShape(pp, aa, xi(qua), 0);    %在内部积分
                 integ2 = integ2 + u_ele(aa) * PolyShape(pp, aa, xi(qua), 1) * dxi_dx;
             end
+
             eL21(n_el/2) = eL21(n_el/2) + weighti_nel(qua) * (integ1 - xi_nel(qua)^5)^2;
             eH11(n_el/2) = eH11(n_el/2) + weighti_nel(qua) * (integ2 - 5 * xi_nel(qua)^4)^2;
         end
@@ -131,16 +133,5 @@ legend('eL2 Error', 'eH1 Error');
 
 eH1Slope = polyfit(log(1./(2 : 2 : 16)), log(eH1), 1);
 eL2Slope = polyfit(log(1./(2 : 2 : 16)), log(eL2), 1);
-
-
-
-
-
-
-
-
-
-
-
 
 
