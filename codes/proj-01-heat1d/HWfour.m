@@ -10,7 +10,6 @@ pp   = 1;              % polynomial degree
 n_en = pp + 1;         % number of element or local nodes
 n_int = 10;
 [xi, weight] = Gauss(n_int, -1, 1);
-[t01, t01_weight] = Gauss(n_int, 0, 1);
 eL21 = zeros(8, 1);
 eH11 = zeros(8, 1);
 
@@ -83,6 +82,22 @@ for n_el = 2 : 2 : 16                             % hw4 2
 
 
     % from here begin
+
+du_dx = @(x) 5 * x.^4;
+uu    = @(x) x.^5;
+eL22 = 0.0;
+eH12 = 0.0;
+
+[t01, t01_weight] = Gauss(n_int, 0, 1);
+for qua = 1 : n_int
+    eH12 = eH12 + t01_weight(qua) * du_dx(t01(qua)) ^ 2;
+    eL22 = eL22 + t01_weight(qua) * uu(t01(qua)) ^ 2;
+    if qua == n_int
+        eH12 = eH12 ^ 0.5;
+        eL22 = eL22 ^ 0.5;
+    end
+end
+
     for nel = 1 : n_el
         [xi_nel, weighti_nel] = Gauss(n_int, (nel - 1) /n_el , nel / n_el);     %每个节点内部的积分要在哪里，节点左右由间距表示
         x_ele = x_coor( IEN(nel, :) );
@@ -91,7 +106,7 @@ for n_el = 2 : 2 : 16                             % hw4 2
             integ1 = 0.0;
             integ2 = 0.0;
             for aa = 1 : n_en
-                integ1 = integ1 + u_ele(aa) * PolyShape(pp, aa, xi(qua), 0);
+                integ1 = integ1 + u_ele(aa) * PolyShape(pp, aa, xi(qua), 0);    %在内部积分
                 integ2 = integ2 + u_ele(aa) * PolyShape(pp, aa, xi(qua), 1);
             end
             eL21(n_el/2) = eL21(n_el/2) + weighti_nel(qua) * (integ1 - xi_nel(qua)^5)^2;
@@ -104,40 +119,14 @@ for n_el = 2 : 2 : 16                             % hw4 2
     end
 end
 
-du_dx = @(x) 5 * x.^4;
-uu    = @(x) x.^5;
-eL22 = 0.0;
-eH12 = 0.0;
-
-for qua = 1 : n_int
-    eH12 = eH12 + t01_weight(qua) * du_dx(t01(qua)) ^ 2;
-    eL22 = eL22 + t01_weight(qua) * uu(t01(qua)) ^ 2;
-    if qua == n_int
-        eH12 = eH12 ^ 0.5;
-        eL22 = eL22 ^ 0.5;
-    end
-end
-
-eL2 = eL21 / eL22;
-eH1 = eH11 / eH12;
+eL2 = eL21 / eL22;    %L2误差
+eH1 = eH11 / eH12;    %H1误差
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+plot(log(2 : 2 : 16), log(eL2), '-r','LineWidth',3);
+hold on;
+grid on;
+plot(log(2 : 2 : 16), log(eH1), '-k','LineWidth',3);
 
 
 
