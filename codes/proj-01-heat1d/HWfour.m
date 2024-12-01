@@ -110,7 +110,7 @@ end
                 dx_dxi = dx_dxi + x_ele(aa) * PolyShape(pp, aa, xi(qua), 1);
             end
             dxi_dx = 1.0 / dx_dxi;
-            
+
             integ1 = 0.0;
             integ2 = 0.0;
             for aa = 1 : n_en
@@ -136,6 +136,13 @@ plot(log(1./(2 : 2 : 16)), log(eL2), '-r','LineWidth',3);
 hold on;
 grid on;
 plot(log(1./(2 : 2 : 16)), log(eH1), '-k','LineWidth',3);
+legend('eL2 Error', 'eH1 Error');
+
+eH1Slope = polyfit(log(1./(2 : 2 : 16)), log(eH1), 1);
+eL2Slope = polyfit(log(1./(2 : 2 : 16)), log(eL2), 1);
+
+
+
 
 
 
