@@ -8,7 +8,7 @@ h = 0.0;           % -u,x = h  at x = 0
 % Setup the mesh
 pp   = 3;              % polynomial degree
 n_en = pp + 1;         % number of element or local nodes
-n_el = 2;              % number of elements
+n_el = 10000;              % number of elements
 n_np = n_el * pp + 1;  % number of nodal points
 n_eq = n_np - 1;       % number of equations
 n_int = 3;
@@ -80,55 +80,13 @@ end
 % ee = 1 F = NA(0)xh
 F(ID(IEN(1,1))) = F(ID(IEN(1,1))) + h;
 
-% Solve Kd = F equation
+tic
+x = gmres(K, F, 10000, 1e-4 , 10000);
+
+x = [x; g];
+toc
+tic
 d_temp = K \ F;
 
 disp = [d_temp; g];
-
-% Postprocessing: visualization
-%plot(x_coor, disp, '--r','LineWidth',3);
-
-%x_sam = 0 : 0.01 : 1;
-%y_sam = x_sam.^5;
-%hold on;
-%plot(x_sam, y_sam, '-k', 'LineWidth', 3);
-
-n_sam = 20;
-xi_sam = -1 : (2/n_sam) : 1;
-
-x_sam = zeros(n_el * n_sam + 1, 1);
-y_sam = x_sam; % store the exact solution value at sampling points
-u_sam = x_sam; % store the numerical solution value at sampling pts
-
-for ee = 1 : n_el
-  x_ele = x_coor( IEN(ee, :) );
-  u_ele = disp( IEN(ee, :) );
-
-  if ee == n_el
-    n_sam_end = n_sam+1;
-  else
-    n_sam_end = n_sam;
-  end
-
-  for ll = 1 : n_sam_end
-    x_l = 0.0;
-    u_l = 0.0;
-    for aa = 1 : n_en
-      x_l = x_l + x_ele(aa) * PolyShape(pp, aa, xi_sam(ll), 0);
-      u_l = u_l + u_ele(aa) * PolyShape(pp, aa, xi_sam(ll), 0);
-    end
-
-    x_sam( (ee-1)*n_sam + ll ) = x_l;
-    u_sam( (ee-1)*n_sam + ll ) = u_l;
-    y_sam( (ee-1)*n_sam + ll ) = x_l^5;
-  end
-end
-
-
-plot(x_sam, u_sam, '-r','LineWidth',3);
-hold on;
-plot(x_sam, y_sam, '-k','LineWidth',3);
-
-
-
-% EOF
+toc
