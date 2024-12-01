@@ -119,24 +119,21 @@ for n_el = 2 : 2 : 16                             % hw4 2
         x_ele = x_coor( IEN(nel, :) );
         u_ele = disp( IEN(nel, :) );
         for qua = 1 : n_int
-            integ = 0.0;
+            integ1 = 0.0;
+            integ2 = 0.0;
             for aa = 1 : n_en
-                integ = integ + u_ele(aa) * PolyShape(pp, aa, xi_nel(qua), 0);
+                integ1 = integ1 + u_ele(aa) * PolyShape(pp, aa, xi(qua), 0);
+                integ2 = integ2 + u_ele(aa) * PolyShape(pp, aa, xi(qua), 1);
             end
-            eL21(n_el/2, 1) = eL21(n_el/2, 1) + weighti_nel(qua) * (integ - xi_nel(qua)^5)^2;
+            eL21(n_el/2, 1) = eL21(n_el/2, 1) + weighti_nel(qua) * (integ1 - xi_nel(qua)^5)^2;
+            eH11(n_el/2, 1) = eH11(n_el/2, 1) + weighti_nel(qua) * (integ2 - 5 * xi_nel(qua)^4)^2;
         end
-    end
-
-    t01_i = zeros(n_int , 1);
-    for ee = 1 : n_el
-        for qua = 1 : n_int
-            if (1 / n_el) * (ee - 1) < t01(qua) && t01(qua) < (1 / n_el) * ee
-                t01_i(qua) = (t01(qua) - (1 / n_el) * (ee - 1)) / (1 / n_el) * 2 - 1;
-            end
+        if nel == n_el
+            eL21(n_el/2, 1) = eL21(n_el/2, 1) ^ 0.5;
+            eH11(n_el/2, 1) = eH11(n_el/2, 1) ^ 0.5;
         end
     end
 end
-
 
 du_dx = @(x) 5 * x.^4;
 uu    = @(x) x.^5;
@@ -154,7 +151,6 @@ end
 
 eL2 = eL21 / eL22;
 eH1 = eH11 / eH12;
-
 
 
 
