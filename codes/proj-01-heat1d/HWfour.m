@@ -6,7 +6,7 @@ g = 1.0;           % u    = g  at x = 1
 h = 0.0;           % -u,x = h  at x = 0
 
 % Setup the mesh
-pp   = 2;              % polynomial degree
+pp   = 1;              % polynomial degree
 n_en = pp + 1;         % number of element or local nodes
 n_int = 10;
 [xi, weight] = Gauss(n_int, -1, 1);
@@ -74,35 +74,29 @@ for n_el = 2 : 2 : 16                             % hw4 2
     end
 
     F(ID(IEN(1,1))) = F(ID(IEN(1,1))) + h;
-
-
     d_temp = K \ F;
-
     disp = [d_temp; g];
 
 
     % from here begin
+    du_dx = @(x) 5 * x.^4;
+    uu    = @(x) x.^5;
+    eL22 = 0.0;
+    eH12 = 0.0;
+    [t01, t01_weight] = Gauss(n_int, 0, 1);
 
-du_dx = @(x) 5 * x.^4;
-uu    = @(x) x.^5;
-eL22 = 0.0;
-eH12 = 0.0;
-
-[t01, t01_weight] = Gauss(n_int, 0, 1);
-for qua = 1 : n_int
-    eH12 = eH12 + t01_weight(qua) * du_dx(t01(qua)) ^ 2;
-    eL22 = eL22 + t01_weight(qua) * uu(t01(qua)) ^ 2;
-    if qua == n_int
-        eH12 = eH12 ^ 0.5;
-        eL22 = eL22 ^ 0.5;
+    for qua = 1 : n_int
+        eH12 = eH12 + t01_weight(qua) * du_dx(t01(qua)) ^ 2;
+        eL22 = eL22 + t01_weight(qua) * uu(t01(qua)) ^ 2;
+        if qua == n_int
+            eH12 = eH12 ^ 0.5;
+            eL22 = eL22 ^ 0.5;
+        end
     end
-end
 
     for nel = 1 : n_el
         [xi_nel, weighti_nel] = Gauss(n_int, (nel - 1) /n_el , nel / n_el);     %每个节点内部的积分要在哪里，节点左右由间距表示
         u_ele = disp( IEN(nel, :) );
-
-
 
         for qua = 1 : n_int
             dx_dxi = 0.0;
@@ -110,7 +104,6 @@ end
                 dx_dxi = dx_dxi + x_ele(aa) * PolyShape(pp, aa, xi(qua), 1);
             end
             dxi_dx = 1.0 / dx_dxi;
-
             integ1 = 0.0;
             integ2 = 0.0;
             for aa = 1 : n_en
@@ -127,10 +120,8 @@ end
     end
 end
 
-
 eL2 = eL21 / eL22;    %L2误差
 eH1 = eH11 / eH12;    %H1误差
-
 
 plot(log(1./(2 : 2 : 16)), log(eL2), '-r','LineWidth',3);
 hold on;
