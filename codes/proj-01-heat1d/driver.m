@@ -6,7 +6,7 @@ g = 1.0;           % u    = g  at x = 1
 h = 0.0;           % -u,x = h  at x = 0
 
 % Setup the mesh
-pp   = 2;              % polynomial degree
+pp   = 1;              % polynomial degree
 n_en = pp + 1;         % number of element or local nodes
 n_el = 2;              % number of elements
 n_np = n_el * pp + 1;  % number of nodal points
@@ -128,95 +128,6 @@ end
 plot(x_sam, u_sam, '-r','LineWidth',3);
 hold on;
 plot(x_sam, y_sam, '-k','LineWidth',3);
-
-for n_el = 2 : 2 : 16                             % hw4 2
-    n_np = n_el * pp + 1;                         % copy above which changed by n_el
-    n_eq = n_np - 1;
-
-    hh = 1.0 / (n_np - 1);
-    x_coor = 0 : hh : 1;
-
-    IEN = zeros(n_el , n_en);
-    for ee = 1 : n_el
-        for aa = 1 : n_en
-            IEN(ee , aa) = (ee - 1) * pp + aa;
-        end
-    end
-
-    ID = 1 : n_np;
-    ID(end) = 0;
-
-    K = spalloc(n_eq, n_eq, (2*pp+1)*n_eq);
-    F = zeros(n_eq, 1);
-
-    for ee = 1 : n_el
-        k_ele = zeros(n_en, n_en);
-        f_ele = zeros(n_en, 1);
-
-        x_ele = x_coor(IEN(ee,:));
-
-        for qua = 1 : n_int
-            dx_dxi = 0.0;
-            x_l = 0.0;
-            for aa = 1 : n_en
-                x_l = x_l + x_ele * PolyShape(pp, aa, xi(qua), 0);
-                dx_dxi = dx_dxi + x_ele * PolyShape(pp, aa, xi(qua), 1);
-            end
-            %dxi_dx = 1 / dx_dxi;
-
-            for aa = 1 : n_en
-
-
-            end
-        end
-    end
-
-
-
-
-end
-
-[t01, t01_weight] = Gauss(n_int, 0, 1);
-eL22 = 0.0;
-eH12 = 0.0;
-du_dx = @(x) 5 * x.^4;
-uu    = @(x) x.^5;
-
-for qua = 1 : n_int
-    eH12 = eH12 + t01_weight(qua) * du_dx(t01(qua)) ^ 2;
-    eL22 = eL22 + t01_weight(qua) * uu(t01(qua)) ^ 2;
-    if qua == n_int
-        eH12 = eH12 ^ 0.5;
-        eL22 = eL22 ^ 0.5;
-    end
-end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
