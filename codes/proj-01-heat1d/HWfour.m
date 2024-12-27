@@ -6,7 +6,7 @@ g = 1.0;           % u    = g  at x = 1
 h = 0.0;           % -u,x = h  at x = 0
 
 % Setup the mesh
-pp   = 3;              % polynomial degree
+pp   = 1;              % polynomial degree
 n_en = pp + 1;         % number of element or local nodes
 n_int = 10;
 [xi, weight] = Gauss(n_int, -1, 1);

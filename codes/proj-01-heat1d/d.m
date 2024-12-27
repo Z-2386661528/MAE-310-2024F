@@ -81,10 +81,11 @@ end
 F(ID(IEN(1,1))) = F(ID(IEN(1,1))) + h;
 
 tic
-x = gmres(K, F, 10000, 1e-4 , 10000);
+x = gmres(K, F, 10000, 1e-6 , 10000);
 
 x = [x; g];
 toc
+
 tic
 d_temp = K \ F;
 
