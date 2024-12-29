@@ -153,3 +153,33 @@ end
 save("HEAT", "disp", "n_el_x", "n_el_y");
 
 % EOF
+
+[xi, eta, weight] = Gauss2D(n_int_xi, n_int_eta);
+e0 = 0.0; e1 = 0.0;
+
+for ee = 1 : n_el
+  x_ele = x_coor( IEN(ee, :) );
+  y_ele = y_coor( IEN(ee, :) );
+  u_ele = disp( IEN(ee, :) );
+
+    for ll = 1 : n_int
+        x_l = 0.0; dx_dxi = 0.0; dx_deta = 0.0;
+        y_l = 0.0; dy_dxi = 0.0; dy_deta = 0.0;
+        u_l = 0.0; du_dxi = 0.0; du_deta = 0.0;
+        for aa = 1 : n_en
+            x_l     = x_l     + x_ele(aa) * Quad(aa, xi(ll), eta(ll));
+            dx_dxi  = dx_dxi  + x_ele(aa) * Quad_grad(aa, xi(ll), eta(ll));
+            dx_deta = dx_deta + x_ele(aa) * Quad_grad(aa, xi(ll), eta(ll));
+            y_l     = y_l     + y_ele(aa) * Quad(aa, xi(ll), eta(ll));
+            dy_dxi  = dy_dxi  + y_ele(aa) * Quad_grad(aa, xi(ll), eta(ll));
+            dy_deta = dy_deta + y_ele(aa) * Quad_grad(aa, xi(ll), eta(ll));
+            u_l     = u_l     + u_ele(aa) * Quad(aa, xi(ll), eta(ll));
+            du_dxi  = du_dxi  + u_ele(aa) * Quad_grad(aa, xi(ll), eta(ll));
+            du_deta = du_deta + u_ele(aa) * Quad_grad(aa, xi(ll), eta(ll));
+        end
+
+        detJ = dx_dxi * dy_deta - dx_deta * dy_dxi;
+
+        e0 = e0 + weight(ll) * (u_l - exact(x_l, y_l) )^2 * detJ;
+    end
+end

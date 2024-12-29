@@ -134,4 +134,41 @@ legend('eL2 Error', 'eH1 Error');
 eH1Slope = polyfit(log(1./(2 : 2 : 16)), log(eH1), 1);
 eL2Slope = polyfit(log(1./(2 : 2 : 16)), log(eL2), 1);
 
+% 
+nqp = 10;
+[xi, weight] = Gauss(nqp, -1, 1);
+
+L2_top = 0.0; L2_bot = 0.0; H1_top = 0.0; H1_bot = 0.0;
+
+for ee = 1 : n_el
+  x_ele = x_coor( IEN(ee, :) );
+  u_ele = disp( IEN(ee, :) );
+
+  for ll = 1 : nqp
+    x_l = 0.0; uh = 0.0; dx_dxi = 0.0; uh_xi = 0.0;
+    for aa = 1 : n_en
+      x_l    = x_l    + x_ele(aa) * PolyShape(pp, aa, xi(ll), 0);
+      uh     = uh     + u_ele(aa) * PolyShape(pp, aa, xi(ll), 0);
+      dx_dxi = dx_dxi + x_ele(aa) * PolyShape(pp, aa, xi(ll), 1);
+      uh_xi  = uh_xi  + u_ele(aa) * PolyShape(pp, aa, xi(ll), 1);
+    end
+    dxi_dx = 1.0 / dx_dxi;
+
+    L2_top = L2_top + weight(ll) * (uh - exact(x_l))^2 * dx_dxi;
+    L2_bot = L2_bot + weight(ll) * exact(x_l)^2 * dx_dxi;
+
+    H1_top = H1_top + weight(ll) * ( uh_xi * dxi_dx - exact_x(x_l) )^2 * dx_dxi;
+    H1_bot = H1_bot + weight(ll) * exact_x(x_l)^2 * dx_dxi;
+
+  end
+end
+
+L2_top = sqrt(L2_top); L2_bot = sqrt(L2_bot);
+H1_top = sqrt(H1_top); H1_bot = sqrt(H1_bot);
+
+L2_error = L2_top / L2_bot;
+H1_error = H1_top / H1_bot;
+
+%} EOF
+
 
