@@ -165,7 +165,7 @@ for i = 1 : 6
         for ll = 1 : n_int
             x_l = 0.0; dx_dxi = 0.0; dx_deta = 0.0;
             y_l = 0.0; dy_dxi = 0.0; dy_deta = 0.0;
-            u_l = 0.0; du_dxi = 0.0; du_deta = 0.0;
+            u_l = 0.0; du_dx = 0.0; du_dy = 0.0;
                 for aa = 1 : n_en
                     x_l     = x_l     + x_ele(aa) * Quad(aa, xi(ll), eta(ll), n_en);
                     y_l     = y_l     + y_ele(aa) * Quad(aa, xi(ll), eta(ll), n_en);
@@ -174,37 +174,39 @@ for i = 1 : 6
                     dx_deta = dx_deta + x_ele(aa) * Na_eta;
                     dy_dxi  = dy_dxi  + y_ele(aa) * Na_xi;
                     dy_deta = dy_deta + y_ele(aa) * Na_eta;
-                    u_l     = u_l     + u_ele(aa) * Quad(aa, xi(ll), eta(ll), n_en);
-                    du_dxi  = du_dxi  + u_ele(aa) * Quad_grad(aa, xi(ll), eta(ll), n_en);
-                    du_deta = du_deta + u_ele(aa) * Quad_grad(aa, xi(ll), eta(ll), n_en);
                 end
 
-                dxi_dx = 1 / dx_dxi;
-                deta_dx = 1 / dx_deta;
-                dxi_dy = 1 / dy_dxi;
-                deta_dy = 1 / dy_deta;
                 detJ   = dx_dxi * dy_deta - dx_deta * dy_dxi;
 
+                for aa = 1 : n_en
+                    [Na_xi, Na_eta] = Quad_grad(aa, xi(ll), eta(ll), n_en);
+                    Na = Quad(aa, xi(ll), eta(ll), n_en);
+                    Na_x = (Na_xi * dy_deta - Na_eta * dy_dxi) / detJ;
+                    Na_y = (-Na_xi * dx_deta + Na_eta * dx_dxi) / detJ;
+                    u_l = u_l + u_ele(aa) * Na;
+                    du_dx = du_dx + u_ele(aa) * Na_x;
+                    du_dy = du_dy + u_ele(aa) * Na_y;
+                end
+
                 e0 = e0 + weight(ll) * (u_l - exact(x_l, y_l) )^2 * detJ;
-                e1 = e1 + weight(ll) * (du_dxi * dxi_dx + du_deta * deta_dx + du_dxi * dxi_dy + du_deta * deta_dy - exact(x_l, y_l) )^2 * detJ;
+                e1 = e1 + weight(ll) * ((du_dx - exact_x(x_l, y_l))^2 + (du_dy - exact_y(x_l, y_l))^2) * detJ;
         end
     end
-    e0r(i) = e0;
-    e1r(i) = e0;
+    e0r(i) = e0 ^ 0.5;
+    e1r(i) = e1 ^ 0.5;
 end
 
 plot(log(1./(10 : 10 : 60)), log(e0r), '-r','LineWidth',3);
 hold on;
 grid on;
-plot(log(1./(10 : 10 : 60)), log(e1r), '-r','LineWidth',3);
-
 e00Slope = polyfit(log(1./(10 : 10 : 60)), log(e0r), 1);
 e10Slope = polyfit(log(1./(10 : 10 : 60)), log(e1r), 1);
 
+plot(log(1./(10 : 10 : 60)), log(e1r), '-b','LineWidth',3);
 
+str1 = 'e0r  k='+ "" + mat2str(e00Slope(1, 1));
+str2 = 'e1r  k='+ "" + mat2str(e10Slope(1, 1));
 
-
-
-
-
+legend(str1,str2);
+title("triangle");
 % EOF
