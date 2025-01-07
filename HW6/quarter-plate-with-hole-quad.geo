@@ -40,7 +40,7 @@ Transfinite Line{1, 2, 3, 4, 5, 6, 7} = 3;
 Transfinite Surface{1};
 Transfinite Surface{2};
 
-//对网格优化
+//把两个三角形合成一个四边形
 Recombine Surface{1};
 Recombine Surface{2};
 

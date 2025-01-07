@@ -13,7 +13,7 @@ f = @(x,y) 2.0 * kappa * x * (1-x) + 2.0 * kappa  *y * (1-y); % source term
 n_int_xi  = 3;
 n_int_eta = 3;
 n_int     = n_int_xi * n_int_eta;
-[xi, eta, weight] = Gauss2D(n_int_xi, n_int_eta);
+[xi, eta, weight] = Gauss2D(n_int_xi, n_int_eta, 3);
 
 % mesh generation
 n_en   = 3;                % number of nodes in an element
@@ -83,7 +83,7 @@ for ee = 1 : n_el
   k_ele = zeros(n_en, n_en); % element stiffness matrix
   f_ele = zeros(n_en, 1);    % element load vector
   
-  for ll = 1 : n_int         %ll是积分过程中的节点
+  for ll = 1 : 3         %ll是积分过程中的节点
     x_l = 0.0; y_l = 0.0;
     dx_dxi = 0.0; dx_deta = 0.0;
     dy_dxi = 0.0; dy_deta = 0.0;

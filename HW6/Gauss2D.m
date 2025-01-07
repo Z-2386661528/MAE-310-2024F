@@ -1,21 +1,27 @@
-function [xi, eta, w] = Gauss2D(N1, N2)
+function [xi, eta, w] = Gauss2D(N1, N2, side)
 
-% preallocation
-xi = zeros(N1*N2,1);
-eta = xi;
-w = xi;
+if side == 4
+    % preallocation
+    xi = zeros(N1*N2,1);
+    eta = xi;
+    w = xi;
 
-% generate 1D rule
-[x1, w1] = Gauss(N1, -1, 1);
+    % generate 1D rule
+    [x1, w1] = Gauss(N1, -1, 1);
 
-[x2, w2] = Gauss(N2, -1, 1);
+    [x2, w2] = Gauss(N2, -1, 1);
 
-for ii = 1 : N1
-    for jj = 1 : N2
-    xi( (jj-1)*N1 + ii )  = x1(ii);
-    eta( (jj-1)*N1 + ii ) = x2(jj);
-    w( (jj-1)*N1 + ii)    = w1(ii) * w2(jj);
+    for ii = 1 : N1
+        for jj = 1 : N2
+            xi( (jj-1)*N1 + ii )  = x1(ii);
+            eta( (jj-1)*N1 + ii ) = x2(jj);
+            w( (jj-1)*N1 + ii)    = w1(ii) * w2(jj);
+        end
     end
+elseif side == 3
+    xi  = [1/6, 1/6, 2/3];
+    eta = [2/3, 1/6, 1/6];
+    w   = [1/3, 1/3, 1/3];
 end
 
 % EOF
