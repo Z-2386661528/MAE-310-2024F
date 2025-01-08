@@ -2,15 +2,13 @@ clear all; clc;
 
 miu  =  0.3; % Poisson's ratio
 E    = 1E9; % Elastic Modulus
-lamt = miu * E / ((1 + miu) * (1 - 2 * miu));
-ita  = E / (2 * (1 + miu));
 
 D = zeros(3, 3);                         % another D  
-D(1, 1) = E / (1 - miu^2);
-D(2, 2) = D(1, 1);
-D(1, 2) = E  * miu / (1 - miu^2);
-D(2, 1) = D(1, 2);
-D(3, 3) = E * (1-miu) / 2/(1 - miu^2);
+D(1, 1) = E/(1-miu^2);
+D(2, 2) = D(1,1);
+D(1, 2) = E *miu/(1-miu^2);
+D(2, 1) = D(1,2);
+D(3, 3) = E*(1-miu)/(2*(1 - miu^2));
 
 % exact solution
 exact_at_x = @(x,y) x*(1-x)*y*(1-y);
@@ -84,8 +82,8 @@ for ii = 1 : 2
     LM{ii} = zeros(size(IEN));           % so use cell
     for jj = 1 : n_el
         for kk = 1 : n_en
-            ll = IEN(jj, kk);
-            LM{ii}(jj, kk)= ID(ll, ii);
+            cc = IEN(jj, kk);
+            LM{ii}(jj, kk)= ID(cc, ii);
         end
     end
 end

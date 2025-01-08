@@ -4,11 +4,11 @@ miu  =  0.3; % Poisson's ratio
 E    = 1E9; % Elastic Modulus
 
 D = zeros(3, 3);                         % another D  
-D(1, 1) = E / (1 - miu^2);
-D(2, 2) = D(1, 1);
-D(1, 2) = E  * miu / (1 - miu^2);
-D(2, 1) = D(1, 2);
-D(3, 3) = E * (1-miu) / 2/(1 - miu^2);
+D(1, 1) = E/(1-miu^2);
+D(2, 2) = D(1,1);
+D(1, 2) = E *miu/(1-miu^2);
+D(2, 1) = D(1,2);
+D(3, 3) = E*(1-miu)/(2*(1 - miu^2));
 
 % exact solution
 exact_at_x = @(x,y) x*(1-x)*y*(1-y);
@@ -23,14 +23,16 @@ f_1 = @(x,y)(2*E*y*(y - 1))/(v^2 - 1) - (E*(v/2 - 1/2)*((x - 1)*(y - 1) ...
 f_2 = @(x,y)(2*E*x*(x - 1))/(v^2 - 1) - (E*(v/2 - 1/2)*((x - 1)*(y - 1) ...
     + x*y + x*(y - 1) + y*(x - 1) + 2*y*(y - 1)))/(v^2 - 1) + (E*v*((x - 1)*(y - 1) + x*y + x*(y - 1) + y*(x - 1)))/(v^2 - 1);
 
+
 % quadrature rule
 n_int_xi  = 10;
 n_int_eta = 10;
 n_int     = n_int_xi * n_int_eta;
 [xi, eta, weight] = Gauss2D(n_int_xi, n_int_eta);
-ne = [10, 20 ,40];
+ne = [10, 20, 40, 80];
+eL2_error = zeros(size(ne)); eH1_error = zeros(size(ne));
 
-for error_i = 1 : 3
+for error_i = 1 : length(ne)
     % mesh generation
     n_en   = 4;                    % number of nodes in an element
     n_el_x = ne(error_i);               % number of elements in y-dir
@@ -96,7 +98,7 @@ for error_i = 1 : 3
     end
 
     % allocate the stiffness matrix and load vector
- K = spalloc(n_eq, n_eq, 9 * n_eq);
+    K = spalloc(n_eq, n_eq, 9 * n_eq);
     F = zeros(n_eq, 1);
 
     % loop over element to assembly the matrix and vector
@@ -107,7 +109,7 @@ for error_i = 1 : 3
         k_ele = zeros(2 * n_en, 2 * n_en); % element stiffness matrix
         f_ele = zeros(2 * n_en, 1);    % element load vector
   
-        for ll = 1 : 3         %ll是积分过程中的节点
+        for ll = 1 : n_int         %ll是积分过程中的节点
             x_l = 0.0; y_l = 0.0;
             dx_dxi = 0.0; dx_deta = 0.0;
             dy_dxi = 0.0; dy_deta = 0.0;
@@ -173,7 +175,7 @@ for error_i = 1 : 3
                             QQ = LM{jj}(ee,bb);
                             if QQ > 0
                                 K(PP, QQ) = K(PP, QQ) + k_ele(2*(aa-1)+ii, 2*(bb-1)+jj);
-                            else
+                            %else
 
                             end
                         end
@@ -207,8 +209,6 @@ for error_i = 1 : 3
 
     % from here begin
 
-    [xi, eta, weight] = Gauss2D(n_int_xi, n_int_eta);
-    e0 = 0.0; e1 = 0.0;
 
     for ee = 1 : n_el
         x_ele = x_coor( IEN(ee, 1:n_en) );
@@ -219,7 +219,8 @@ for error_i = 1 : 3
         for ll = 1 : n_int
             x_l = 0.0; dx_dxi = 0.0; dx_deta = 0.0;
             y_l = 0.0; dy_dxi = 0.0; dy_deta = 0.0;
-            u_l = 0.0; du_dx = 0.0; du_dy = 0.0;
+            u_l = 0.0; dux_dx = 0.0; dux_dy = 0.0;
+            duy_dx = 0.0; duy_dy = 0.0;
                 for aa = 1 : n_en
                     x_l     = x_l     + x_ele(aa) * Quad(aa, xi(ll), eta(ll));
                     y_l     = y_l     + y_ele(aa) * Quad(aa, xi(ll), eta(ll));
@@ -239,39 +240,40 @@ for error_i = 1 : 3
                     Na_x = (Na_xi * dy_deta - Na_eta * dy_dxi) / detJ;
                     Na_y = (-Na_xi * dx_deta + Na_eta * dx_dxi) / detJ;
                     
-                        u_l = u_l + u_ele(aa) * Na;
-                        du_dx = du_dx + u_ele(aa) * Na_x;
-                        du_dy = du_dy + u_ele(aa) * Na_y;
+                    u_l = u_l + u_ele(aa) * Na;
+                    dux_dx = dux_dx + u_ele(aa) * Na_x;
+                    dux_dy = dux_dy + u_ele(aa) * Na_y;
+
+                    duy_dx = duy_dx + u_ele(aa) * Na_x;
+                    duy_dy = duy_dy + u_ele(aa) * Na_y;
                     
                 end
 
-                e0 = e0 + weight(ll)  * (u_l - exact_at_x(x_l, y_l) )^2 * detJ;
-
-
-                e1 = e1 + weight(ll) * ((du_dx - exact_x(x_l, y_l))^2 + (du_dy - exact_y(x_l, y_l))^2) * detJ;
+                eL2_error(error_i) = eL2_error(error_i) + weight(ll) * ((u_l - ...
+                    exact_at_x(x_l, y_l))^2 + (u_l - exact_at_y(x_l, y_l) )^2) * detJ;
+                eH1_error(error_i) = eH1_error(error_i) + weight(ll) * ((dux_dx ...
+                    - exact_x(x_l, y_l))^2 + (dux_dy - exact_y(x_l, y_l))^2 + ...
+                    (duy_dx - exact_x(x_l, y_l))^2 + (duy_dx - exact_x(x_l, y_l))^2) * detJ;
         end
     end
-    e0r(error_i) = e0 ^ 0.5;
-    e1r(error_i) = e1 ^ 0.5;
+    eL2_error(error_i) = eL2_error(error_i) ^ 0.5;
+    eH1_error(error_i) = eH1_error(error_i) ^ 0.5;
 end
 
 %loglog((1./(ne)), (e0r), '-ro','LineWidth',3);
 hold on;
-e00Slope = polyfit(log(1./(ne)), log(e0r), 1);
-e10Slope = polyfit(log(1./(ne)), log(e1r), 1);
+eL2_error_Slope = polyfit(log(1./(ne)), log(eL2_error), 1);
+eH1_error_Slope = polyfit(log(1./(ne)), log(eH1_error), 1);
 
-plot(log(1./ne), log(e0r), '-b','LineWidth',3);
-plot(log(1./ne), log(e1r), '-b','LineWidth',3);
+plot(log(1./ne), log(eL2_error), '-b','LineWidth',3);
+plot(log(1./ne), log(eH1_error), '-b','LineWidth',3);
 
 
-str1 = 'e0r  k='+ "" + mat2str(e00Slope(1, 1));
-str2 = 'e1r  k='+ "" + mat2str(e10Slope(1, 1));
+str1 = 'e0r  k='+ "" + mat2str(eL2_error_Slope(1, 1));
+str2 = 'e1r  k='+ "" + mat2str(eH1_error_Slope(1, 1));
 % 
-% legend(str1,str2);
-% title("triangle");
+legend(str1,str2);
 % EOF
-
-
 
 
 
