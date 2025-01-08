@@ -5,6 +5,12 @@ E    = 1E9; % Elastic Modulus
 lamt = miu * E / ((1 + miu) * (1 - 2 * miu));
 ita  = E / (2 * (1 + miu));
 
+D = zeros(3, 3);                         % another D  
+D(1, 1) = E / (1 - miu^2);
+D(2, 2) = D(1, 1);
+D(1, 2) = E  * miu / (1 - miu^2);
+D(2, 1) = D(1, 2);
+D(3, 3) = E * (1-miu) / 2/(1 - miu^2);
 
 % exact solution
 exact_at_x = @(x,y) x*(1-x)*y*(1-y);
@@ -13,8 +19,8 @@ exact_at_y = @(x,y) x*(1-x)*y*(1-y);
 exact_x = @(x,y) (1-2*x)*y*(1-y);
 exact_y = @(x,y) x*(1-x)*(1-2*y);
 
-f_1 = @(x,y) (2*E*y*(y - 1))/(v^2 - 1) - (E*(v/2 - 1/2)*((x - 1)*(y - 1) + x*y + 2*x*(x - 1) + x*(y - 1) + y*(x - 1)))/(v^2 - 1) + (E*v*((x - 1)*(y - 1) + x*y + x*(y - 1) + y*(x - 1)))/(v^2 - 1);
-f_2 = @(x,y) (2*E*x*(x - 1))/(v^2 - 1) - (E*(v/2 - 1/2)*((x - 1)*(y - 1) + x*y + x*(y - 1) + y*(x - 1) + 2*y*(y - 1)))/(v^2 - 1) + (E*v*((x - 1)*(y - 1) + x*y + x*(y - 1) + y*(x - 1)))/(v^2 - 1);
+f_1 = @(x,y) (2*E*y*(y - 1))/(miu^2 - 1) - (E*(miu/2 - 1/2)*((x - 1)*(y - 1) + x*y + 2*x*(x - 1) + x*(y - 1) + y*(x - 1)))/(miu^2 - 1) + (E*miu*((x - 1)*(y - 1) + x*y + x*(y - 1) + y*(x - 1)))/(miu^2 - 1);
+f_2 = @(x,y) (2*E*x*(x - 1))/(miu^2 - 1) - (E*(miu/2 - 1/2)*((x - 1)*(y - 1) + x*y + x*(y - 1) + y*(x - 1) + 2*y*(y - 1)))/(miu^2 - 1) + (E*miu*((x - 1)*(y - 1) + x*y + x*(y - 1) + y*(x - 1)))/(miu^2 - 1);
 % quadrature rule
 n_int_xi  = 3;
 n_int_eta = 3;
@@ -23,8 +29,8 @@ n_int     = n_int_xi * n_int_eta;
 
 % mesh generation
 n_en   = 4;               % number of nodes in an element
-n_el_x = 6;               % number of elements in x-dir
-n_el_y = 6;               % number of elements in y-dir
+n_el_x = 80;               % number of elements in x-dir
+n_el_y = 80;               % number of elements in y-dir
 n_el   = n_el_x * n_el_y; % total number of elements
 
 n_np_x = n_el_x + 1;      % number of nodal points in x-dir
@@ -73,9 +79,9 @@ end
 
 n_eq = counter;
 
-LM = cell(2, 1);
+LM = cell(2, 1);                         % need to use a new map for LM
 for ii = 1 : 2
-    LM{ii} = zeros(size(IEN));
+    LM{ii} = zeros(size(IEN));           % so use cell
     for jj = 1 : n_el
         for kk = 1 : n_en
             ll = IEN(jj, kk);
@@ -84,12 +90,6 @@ for ii = 1 : 2
     end
 end
 
-D = zeros(3, 3);
-D(1, 1) = lamt + 2 * ita;
-D(2, 2) = D(1, 1);
-D(1, 2) = lamt;
-D(2, 1) = D(1, 2);
-D(3, 3) = ita;
 
 % allocate the stiffness matrix and load vector
 % K = spalloc(n_eq, n_eq, 9 * n_eq);
@@ -102,7 +102,7 @@ for ee = 1 : n_el
   y_ele = y_coor( IEN(ee, 1:n_en) );
   
   k_ele = zeros(n_en * 2, n_en * 2); % element stiffness matrix
-  f_ele = zeros(n_en, 1);    % element load vector
+  f_ele = zeros(n_en * 2, 1);    % element load vector
   
   for ll = 1 : n_int
     x_l = 0.0; y_l = 0.0;
@@ -133,7 +133,8 @@ for ee = 1 : n_el
       B1(3, 1) = Na_y;
 
       
-      %f_ele(aa) = f_ele(aa) + weight(ll) * detJ * f(x_l, y_l) * Na;
+      f_ele(2*(aa-1)+1) = f_ele(2*(aa-1)+1) + weight(ll) * detJ * f_1(x_l, y_l) * Na;
+      f_ele(2*(aa-1)+2) = f_ele(2*(aa-1)+2) + weight(ll) * detJ * f_2(x_l, y_l) * Na;
       
       for bb = 1 : n_en
         Nb = Quad(bb, xi(ll), eta(ll));
@@ -142,40 +143,39 @@ for ee = 1 : n_el
         Nb_y = (-Nb_xi * dx_deta + Nb_eta * dx_dxi) / detJ;
 
         B2 = zeros(3, 2);
-        B2(1, 1) = Na_x;
-        B2(2, 2) = Na_y;
-        B2(3, 2) = Na_x;
-        B2(3, 1) = Na_y;
-
-        D4 = B1' * D * B2;
+        B2(1, 1) = Nb_x;
+        B2(2, 2) = Nb_y;
+        B2(3, 2) = Nb_x;
+        B2(3, 1) = Nb_y;
 
         for i = 1 : 2
             for j = 1 : 2
-                k_ele(2 * (aa - 1) + i, 2 * (bb - 1) + j) = k_ele(2 * (aa - 1) + i, 2 * (bb - 1) + j) + weight(ll) * detJ * D4(i, j);
+                ei = unit_vector(i);
+                ej = unit_vector(j);
+                k_ele(2*(aa-1)+i, 2*(bb-1)+j) = k_ele(2*(aa-1)+i, 2*(bb-1)+j) + weight(ll) * detJ * ei' * B1' * D * B2 * ej;
             end
         end
-        
-        
       end % end of bb loop
     end % end of aa loop
   end % end of quadrature loop
- 
+
   for aa = 1 : n_en
-    PP = LM{1}(ee, aa);
-    if PP > 0
-      F(PP) = F(PP) + f_ele(aa);
-      
-      for bb = 1 : n_en
-        QQ = LM{1}(ee, bb);
-        if QQ > 0
-          K(PP, QQ) = K(PP, QQ) + k_ele(aa, bb) + k_ele(aa+1, bb) + k_ele(aa, bb+1) + k_ele(aa+1, bb);
-        else
-          % modify F with the boundary data
-          % here we do nothing because the boundary data g is zero or
-          % homogeneous
-        end
-      end  
-    end
+      for ii = 1 : 2
+          PP = LM{ii}(ee,aa);
+          if PP > 0
+              F(PP) = F(PP) + f_ele(2*(aa-1)+ii);
+              for bb = 1 :n_en
+                  for jj = 1: 2
+                      QQ = LM{jj}(ee,bb);
+                        if QQ > 0
+                            K(PP, QQ) = K(PP, QQ) + k_ele(2*(aa-1)+ii, 2*(bb-1)+jj);
+                        else
+
+                        end
+                  end
+              end
+          end
+      end
   end
 end
 
@@ -183,19 +183,40 @@ end
 dn = K \ F;
 
 % insert dn back into the vector for all nodes
-disp = zeros(n_np, 1);
+disp = zeros(n_np, 2);
 
-for ii = 1 : n_np
-  index = ID(ii);
-  if index > 0
-    disp(ii) = dn(index);
-  else
-    % modify disp with the g data. Here it does nothing because g is zero
-  end
+for n_nsd = 1 : 2
+    for ii = 1 : n_np
+        index = ID(ii , n_nsd);
+        if index > 0
+            disp(ii, n_nsd) = dn(index);
+        else
+        end
+    end
 end
+
+
+close all;
+[X, Y] = meshgrid(0 : hx : 1, 0 : hy : 1);
+Z = reshape(disp(:,2), n_np_x, n_np_y)';
+surf(X, Y, Z);
+
+shading interp;
+
+% EOF
+
+
 
 % save the solution vector and number of elements to disp with name
 % HEAT.mat
 save("HEAT", "disp", "n_el_x", "n_el_y");
 
 % EOF
+
+function ei = unit_vector(ii)
+    if ii == 1
+        ei = [1, 0]';
+    else
+        ei = [0, 1]';
+    end
+end
