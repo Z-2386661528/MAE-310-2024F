@@ -1,14 +1,15 @@
-clear; clc;clf;
+clear all; clc;
 
 miu  =  0.3; % Poisson's ratio
 E    = 1E9; % Elastic Modulus
+
 
 D = zeros(3, 3);                         % another D  
 D(1, 1) = E/(1-miu^2);
 D(2, 2) = D(1,1);
 D(1, 2) = E *miu/(1-miu^2);
 D(2, 1) = D(1,2);
-D(3, 3) = E*(1-miu)/(2*(1 - miu^2));
+D(3, 3) = E*(1-miu)/(2*(1-miu^2));
 
 % exact solution
 exact_at_x = @(x,y) x*(1-x)*y*(1-y);
@@ -17,12 +18,12 @@ exact_at_y = @(x,y) x*(1-x)*y*(1-y);
 exact_x = @(x,y) (1-2*x)*y*(1-y);
 exact_y = @(x,y) x*(1-x)*(1-2*y);
 
-v = miu;
-f_1 = @(x,y)(2*E*y*(y - 1))/(v^2 - 1) - (E*(v/2 - 1/2)*((x - 1)*(y - 1) ...
-    + x*y + 2*x*(x - 1) + x*(y - 1) + y*(x - 1)))/(v^2 - 1) + (E*v*((x - 1)*(y - 1) + x*y + x*(y - 1) + y*(x - 1)))/(v^2 - 1);
-f_2 = @(x,y)(2*E*x*(x - 1))/(v^2 - 1) - (E*(v/2 - 1/2)*((x - 1)*(y - 1) ...
-    + x*y + x*(y - 1) + y*(x - 1) + 2*y*(y - 1)))/(v^2 - 1) + (E*v*((x - 1)*(y - 1) + x*y + x*(y - 1) + y*(x - 1)))/(v^2 - 1);
-
+f_1 = @(x,y) (2*E*y*(y - 1))/(miu^2 - 1) - (E*(miu/2 - 1/2)*((x - 1)*(y - 1) ...
+    + x*y + 2*x*(x - 1) + x*(y - 1) + y*(x - 1)))/(miu^2 - 1) ...
++ (E*miu*((x - 1)*(y - 1) + x*y + x*(y - 1) + y*(x - 1)))/(miu^2 - 1);
+f_2 = @(x,y) (2*E*x*(x - 1))/(miu^2 - 1) - (E*(miu/2 - 1/2)*((x - 1)*(y - 1) ...
+    + x*y + x*(y - 1) + y*(x - 1) + 2*y*(y - 1)))/(miu^2 - 1) ... 
++ (E*miu*((x - 1)*(y - 1) + x*y + x*(y - 1) + y*(x - 1)))/(miu^2 - 1);
 
 % quadrature rule
 n_int_xi  = 10;
@@ -34,25 +35,25 @@ eL2_error = zeros(size(ne)); eH1_error = zeros(size(ne));
 
 for error_i = 1 : length(ne)
     % mesh generation
-    n_en   = 4;                    % number of nodes in an element
-    n_el_x = ne(error_i);               % number of elements in y-dir
-    n_el_y = n_el_x;               % number of elements in y-dir
+    n_en   = 4;                % number of nodes in an element
+    n_el_x = ne(error_i);      % number of elements in y-dir
+    n_el_y = n_el_x;           % number of elements in y-dir
     n_el   = n_el_x * n_el_y;  % total number of elements
 
-    n_np_x = n_el_x + 1;      % number of nodal points in x-dir
-    n_np_y = n_el_y + 1;      % number of nodal points in y-dir
-    n_np   = n_np_x * n_np_y; % total number of nodal points
+    n_np_x = n_el_x + 1;       % number of nodal points in x-dir
+    n_np_y = n_el_y + 1;       % number of nodal points in y-dir
+    n_np   = n_np_x * n_np_y;  % total number of nodal points
 
     x_coor = zeros(n_np, 1);
     y_coor = x_coor;
 
-    hx = 1.0 / n_el_x;        % mesh size in x-dir
-    hy = 1.0 / n_el_y;        % mesh size in y-dir
+    hx = 1.0 / n_el_x;         % mesh size in x-dir
+    hy = 1.0 / n_el_y;         % mesh size in y-dir
 
     % generate the nodal coordinates
     for ny = 1 : n_np_y
         for nx = 1 : n_np_x
-            index = (ny-1)*n_np_x + nx; % nodal index
+            index = (ny-1)*n_np_x + nx;  % nodal index
             x_coor(index) = (nx-1) * hx;
             y_coor(index) = (ny-1) * hy;
         end
@@ -75,7 +76,7 @@ for error_i = 1 : length(ne)
     ID = zeros(n_np,1);
     counter = 0;
     for ny = 2 : n_np_y - 1
-        for nx = 2 : n_np_x - 1                              %从左往右，再从下到上，所以是先y后x，只需要2-5
+        for nx = 2 : n_np_x - 1                        %从左往右，再从下到上，所以是先y后x，只需要2-5
             index = (ny-1)*n_np_x + nx;
             counter = counter + 1;
             ID(index, 1) = counter;
