@@ -270,8 +270,8 @@ plot(log(1./ne), log(eL2_error), '-b','LineWidth',3);
 plot(log(1./ne), log(eH1_error), '-b','LineWidth',3);
 
 
-str1 = 'e0r  k='+ "" + mat2str(eL2_error_Slope(1, 1));
-str2 = 'e1r  k='+ "" + mat2str(eH1_error_Slope(1, 1));
+str1 = 'eL2_error  k='+ "" + mat2str(eL2_error_Slope(1, 1));
+str2 = 'eH1_error  k='+ "" + mat2str(eH1_error_Slope(1, 1));
 % 
 legend(str1,str2);
 % EOF
