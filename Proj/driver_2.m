@@ -56,15 +56,6 @@ IEN_tri(ee*2,2) = IEN(ee,3);
 IEN_tri(ee*2,3) = IEN(ee,4);
 end
 
-for i = 1 : n_el/2
-    a = IEN(i, 1);
-    b = IEN(i, 2);
-    IEN(i, 1) = IEN(i, 4);
-    IEN(i, 2) = IEN(i, 3);
-    IEN(i, 4) = a;
-    IEN(i, 3) = b;
-end
-
 % 右边和上边条件设置
 Dirichlet = -1;
 Newman    = -1;
@@ -115,36 +106,15 @@ for ii = 1 : 2
     end
 end
 
-% find the up and right lines
-x1counter = 0; nodel_up = zeros(n_nd,3);
-y1counter = 0; nodel_right = zeros(n_nd,3);
-x2counter = 0; nodel_down = zeros(n_nd,3);
-y2counter = 0; nodel_left = zeros(n_nd,3);
-
-for ii = 1 : n_lin
-    if msh.LINES(ii,3) == 9
-        x1counter = x1counter + 1;
-        nodel_up(x1counter,:) = msh.LINES(ii,:);
-    elseif msh.LINES(ii,3) == 8
-        y1counter = y1counter + 1;
-        nodel_right(y1counter,:) = msh.LINES(ii,:);
-    elseif msh.LINES(ii,3) == 11
-        x2counter = x2counter + 1;
-        nodel_down(x2counter,:) = msh.LINES(ii,:);
-    elseif msh.LINES(ii,3) == 10
-        y2counter = y2counter + 1;
-        nodel_left(y2counter,:) = msh.LINES(ii,:);
-    end
-end
-
 % allocate the stiffness matrix and load vector
-% K = spalloc(n_eq, n_eq, 9 * n_eq);
-K = zeros(n_eq, n_eq);
+K = spalloc(n_eq, n_eq, 9 * n_eq);
+% K = zeros(n_eq, n_eq);
 F = zeros(n_eq, 1);
 
 % loop over element to assembly the matrix and vector
 x_ele = zeros(n_el, 5);
 y_ele = zeros(n_el, 5);
+
 for ee = 1 : n_el
     x_ele(ee,1:n_en) = x_coor( IEN(ee, 1:n_en) );
     x_ele(ee,5) = x_ele(ee,1);
@@ -213,6 +183,8 @@ for ee = 1 : n_el
         end
     end
 
+    x_ele = x_coor( IEN(ee, 1:n_en) );
+    y_ele = y_coor( IEN(ee, 1:n_en) );
     for ll = 1 : n_int
         x_l = 0.0; y_l = 0.0;
         dx_dxi = 0.0; dx_deta = 0.0;
@@ -229,20 +201,20 @@ for ee = 1 : n_el
 
         detJ = dx_dxi * dy_deta - dx_deta * dy_dxi;
 
+
         for aa = 1 : n_en
             Na = Quad(aa, xi(ll), eta(ll));
             [Na_xi, Na_eta] = Quad_grad(aa, xi(ll), eta(ll));
-            Na_x = (Na_xi * dy_deta - Na_eta * dy_dseit) / detJ;
-            Na_y = (-Na_xi * dx_deta + Na_eta * dx_dseit) / detJ;
+            Na_x = (Na_xi * dy_deta - Na_eta * dy_dxi) / detJ;
+            Na_y = (-Na_xi * dx_deta + Na_eta * dx_dxi) / detJ;
 
             B1 = zeros(3, 2);B1(1, 1) = Na_x;B1(2, 2) = Na_y;B1(3, 2) = Na_x;B1(3, 1) = Na_y;
-
 
             for bb = 1 : n_en
                 Nb = Quad(bb, xi(ll), eta(ll));
                 [Nb_xi, Nb_eta] = Quad_grad(bb, xi(ll), eta(ll));
-                Nb_x = (Nb_xi * dy_deta - Nb_eta * dy_dseit) / detJ;
-                Nb_y = (-Nb_xi * dx_deta + Nb_eta * dx_dseit) / detJ;
+                Nb_x = (Nb_xi * dy_deta - Nb_eta * dy_dxi) / detJ;
+                Nb_y = (-Nb_xi * dx_deta + Nb_eta * dx_dxi) / detJ;
                 B2 = zeros(3, 2);B2(1, 1) = Nb_x;B2(2, 2) = Nb_y;B2(3, 2) = Nb_x;B2(3, 1) = Nb_y;
 
                 for i = 1 : 2
@@ -287,11 +259,11 @@ for n_nsd = 1 : 2
         if index > 0
             disp(ii, n_nsd) = dn(index);
         else
+
         end
     end
 end
 
-hold on;
 trisurf(IEN_tri, x_coor, y_coor, disp(:,1));
 axis equal;
 colormap jet
