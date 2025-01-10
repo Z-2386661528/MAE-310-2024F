@@ -1,4 +1,4 @@
-clear all; clc;
+clear; clc;clf;close all;
 
 run('quarter.m')
 
@@ -252,7 +252,6 @@ dn = K \ F;
 
 % insert dn back into the vector for all nodes
 disp = zeros(n_np, 2);
-
 for n_nsd = 1 : 2
     for ii = 1 : n_np
         index = ID(ii , n_nsd);
@@ -268,8 +267,136 @@ trisurf(IEN_tri, x_coor, y_coor, disp(:,1));
 axis equal;
 colormap jet
 shading interp
+title("x方向位移")
+view(2);
+
+figure;
+trisurf(IEN_tri, x_coor, y_coor, disp(:,2));
+axis equal;
+colormap jet
+shading interp
+title("y方向位移")
+view(2);
+
+strain = zeros(n_el,3);
+for ee = 1 : n_el
+    x_ele = x_coor( IEN(ee, 1:n_en) );
+    y_ele = y_coor( IEN(ee, 1:n_en) );
+    u_ele = disp( IEN(ee, :) , 1);
+
+    for ll = 1 : n_int
+        x_l = 0.0; dx_dxi = 0.0; dx_deta = 0.0;
+        y_l = 0.0; dy_dxi = 0.0; dy_deta = 0.0;
+        u_l = 0.0; dux_dx = 0.0; dux_dy = 0.0;
+        duy_dx = 0.0; duy_dy = 0.0;
+        for aa = 1 : n_en
+            x_l     = x_l     + x_ele(aa) * Quad(aa, xi(ll), eta(ll));
+            y_l     = y_l     + y_ele(aa) * Quad(aa, xi(ll), eta(ll));
+            [Na_xi, Na_eta] = Quad_grad(aa, xi(ll), eta(ll));
+            dx_dxi  = dx_dxi  + x_ele(aa) * Na_xi;
+            dx_deta = dx_deta + x_ele(aa) * Na_eta;
+            dy_dxi  = dy_dxi  + y_ele(aa) * Na_xi;
+            dy_deta = dy_deta + y_ele(aa) * Na_eta;
+        end
+
+        detJ   = dx_dxi * dy_deta - dx_deta * dy_dxi;
+
+        for aa = 1 : n_en
+            [Na_xi, Na_eta] = Quad_grad(aa, xi(ll), eta(ll));
+            Na = Quad(aa, xi(ll), eta(ll));
+
+            Na_x = (Na_xi * dy_deta - Na_eta * dy_dxi) / detJ;
+            Na_y = (-Na_xi * dx_deta + Na_eta * dx_dxi) / detJ;
+            u_l = u_l + u_ele(aa) * Na;
+            dux_dx = dux_dx + u_ele(aa) * Na_x;
+            dux_dy = dux_dy + u_ele(aa) * Na_y;
+
+            duy_dx = duy_dx + u_ele(aa) * Na_x;
+            duy_dy = duy_dy + u_ele(aa) * Na_y;
+            epsilong = [dux_dx dux_dy 0.5*(duy_dx+duy_dy)];
+        end
+
+        for qq = 1 : 3
+            strain(ee,qq) = strain(ee,qq) + weight(ll) * epsilong(qq);
+        end
+    end
+    strain(ee,:) = strain(ee,:) / n_int;
+end
 
 
+node_strain = zeros(n_np, 3);
+% 计算四边形单元面积的函数
+element_area = zeros(n_el, 1);
+for ee = 1:n_el
+    x1 = x_coor(IEN(ee, 1));
+    y1 = y_coor(IEN(ee, 1));
+    x2 = x_coor(IEN(ee, 2));
+    y2 = y_coor(IEN(ee, 2));
+    x3 = x_coor(IEN(ee, 3));
+    y3 = y_coor(IEN(ee, 3));
+    x4 = x_coor(IEN(ee, 4));
+    y4 = y_coor(IEN(ee, 4));
+    area1 = 0.5 * abs((x1 - x3) * (y2 - y4)-(x2 - x4) * (y1 - y3));
+    element_area(ee) = area1;
+end
+
+% 计算节点总相关面积的函数
+for ee = 1:n_el
+    for aa = 1:n_en
+        node_index = IEN(ee, aa);
+        % 用单元面积加权
+        node_strain(node_index, :) = node_strain(node_index, :) + element_area(ee) * strain(ee, :);
+    end
+end
+% 对每个节点的应变进行平均
+for nn = 1:n_np
+    total_area = 0;
+    for ee = 1:n_el
+        if any(IEN(ee, :) == nn)
+            total_area = total_area + element_area(ee);
+        end
+    end
+    if total_area > 0
+        node_strain(nn, :) = node_strain(nn, :) / total_area;
+    end
+end
+% 初始化节点应力数组，每个节点有3个应力分量（xx, yy, xy）
+node_stress = zeros(n_np, 3);
+for nn = 1:n_np
+    node_stress(nn, :) = D * node_strain(nn, :)';
+end
+
+figure;
+trisurf(IEN_tri, x_coor, y_coor, node_strain(:,1));
+axis equal;
+colormap jet
+shading interp
+title("x方向应变")
+view(2);
+
+figure;
+trisurf(IEN_tri, x_coor, y_coor, node_strain(:,2));
+axis equal;
+colormap jet
+shading interp
+title("y方向应变")
+view(2);
+
+figure;
+trisurf(IEN_tri, x_coor, y_coor, node_stress(:,1));
+axis equal;
+colormap jet
+shading interp
+title("x方向应力")
+view(2);
+
+figure;
+trisurf(IEN_tri, x_coor, y_coor, node_stress(:,2));
+axis equal;
+colormap jet
+shading interp
+title("y方向应力")
+view(2);
 
 
 

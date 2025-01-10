@@ -131,14 +131,12 @@ for error_i = 1 : length(ne)
                 [Na_xi, Na_eta] = Quad_grad(aa, xi(ll), eta(ll));
                 Na_x = (Na_xi * dy_deta - Na_eta * dy_dxi) / detJ;
                 Na_y = (-Na_xi * dx_deta + Na_eta * dx_dxi) / detJ;
-      
 
                 B1 = zeros(3, 2);
                 B1(1, 1) = Na_x;
                 B1(2, 2) = Na_y;
                 B1(3, 2) = Na_x;
                 B1(3, 1) = Na_y;
-
       
                 f_ele(2*(aa-1)+1) = f_ele(2*(aa-1)+1) + weight(ll) * detJ * f_1(x_l, y_l) * Na;
                 f_ele(2*(aa-1)+2) = f_ele(2*(aa-1)+2) + weight(ll) * detJ * f_2(x_l, y_l) * Na;

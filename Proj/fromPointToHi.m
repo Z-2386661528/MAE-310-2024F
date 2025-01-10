@@ -1,6 +1,6 @@
 function [hx, hy] = fromPointToHi(x , y , nx , ny)
 
-T = 1;
+T = 1E4;
 R = 0.5;
 
 r = sqrt(x^2+y^2);
