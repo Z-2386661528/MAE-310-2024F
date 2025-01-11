@@ -62,26 +62,25 @@ Newman    = -1;
 
 % ID array
 ID = -1 * ones(n_np, 2);
-for ii = 1 : n_lin
-    if line(ii , 3) == 8
-        ID(line(ii,1),1) = Dirichlet;
-        ID(line(ii,1),2) = Dirichlet;
-    elseif line(ii , 3) == 9
-        ID(line(ii,1),1) = Newman;
-        ID(line(ii,1),2) = Newman;
+for ii = 15 : n_lin
+    if msh.LINES(ii , 3) == 8                 % 右边界
+        ID(msh.LINES(ii,1),1) = Dirichlet;
+        ID(msh.LINES(ii,1),2) = Dirichlet;
+    elseif msh.LINES(ii , 3) == 9             % 上边界
+        ID(msh.LINES(ii,1),1) = Newman;
+        ID(msh.LINES(ii,1),2) = Newman;
     end
-    if line(ii , 3) == 10
-        ID(line(ii,1),1) = 0;
-    elseif line(ii , 3) == 11
-        ID(line(ii,1),2) = 0;
+
+    if msh.LINES(ii , 3) == 10                % 左边界
+        ID(msh.LINES(ii,1),1) = 0;
+    elseif msh.LINES(ii , 3) == 11            % 下边界
+        ID(msh.LINES(ii,1),2) = 0;
     end
 end
 
-ID(1,1) = Dirichlet; ID(1,2) = 0;
-ID(2,1) = Dirichlet; ID(2,2) = Newman;
-ID(3,1) = 0;         ID(3,2) = Newman;
-ID(4,1) = Newman;    ID(4,2) = 0;
-ID(5,1) = 0;         ID(5,2) = Dirichlet;
+ID(3,1) = 0;
+ID(4,2) = 0;
+
 
 counter = 1;
 for ii = 1 : n_np
@@ -112,14 +111,14 @@ K = spalloc(n_eq, n_eq, 9 * n_eq);
 F = zeros(n_eq, 1);
 
 % loop over element to assembly the matrix and vector
-x_ele = zeros(n_el, 5);
-y_ele = zeros(n_el, 5);
+x_ele = zeros(1, n_en + 1);
+y_ele = zeros(1, n_en + 1);
 
 for ee = 1 : n_el
-    x_ele(ee,1:n_en) = x_coor( IEN(ee, 1:n_en) );
-    x_ele(ee,5) = x_ele(ee,1);
-    y_ele(ee,1:n_en) = y_coor( IEN(ee, 1:n_en) );
-    y_ele(ee,5) = y_ele(ee,1);
+    x_ele(1:n_en) = x_coor( IEN(ee, 1:n_en) );
+    x_ele(5) = x_ele(1);
+    y_ele(1:n_en) = y_coor( IEN(ee, 1:n_en) );
+    y_ele(5) = y_ele(1);
 
     k_ele = zeros(n_en * 2, n_en * 2); % element stiffness matrix
     f_ele = zeros(n_en * 2, 1);    % element load vector
@@ -317,10 +316,9 @@ for ee = 1 : n_el
         end
 
         for qq = 1 : 3
-            strain(ee,qq) = strain(ee,qq) + weight(ll) * epsilong(qq);
+            strain(ee,qq) = strain(ee,qq) + epsilong(qq)/n_int;
         end
     end
-    strain(ee,:) = strain(ee,:) / n_int;
 end
 
 
