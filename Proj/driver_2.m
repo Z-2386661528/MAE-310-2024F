@@ -123,13 +123,13 @@ for ee = 1 : n_el
         x_l = 0.0; dx_dseit = 0.0;
         for aa = 1 : n_en
             pp = 2 * aa - 2;
+
             if x_ele(aa) == 1 && x_ele(aa + 1) == 1
+                [hx , hy] = fromPointToHi(1,y_l, 1, 0);
                 for jj = 1 : 2
                     y_l      = y_l      + y_ele(aa + jj - 1) * PolyShape(1, jj , seit(ii),0);
                     dy_dseit = dy_dseit + y_ele(aa + jj - 1) * PolyShape(1, jj , seit(ii),1);
                 end
-
-                [hx , hy] = fromPointToHi(1,y_l, 1, 0);
                 for jj = 1 : 2
                     f_ele(pp + 1) = f_ele(pp + 1) + seit_weight(ii) * PolyShape(1, jj , seit(ii),0) * hx * dy_dseit;
                     f_ele(pp + 2) = f_ele(pp + 2) + seit_weight(ii) * PolyShape(1, jj , seit(ii),0) * hy * dy_dseit;
@@ -137,12 +137,11 @@ for ee = 1 : n_el
             end
 
             if x_ele(aa) == -1 && x_ele(aa + 1) == -1
+                [hx , hy] = fromPointToHi(1 , y_l, -1, 0);
                 for jj = 1 : 2
                     y_l      = y_l      + y_ele(aa + jj - 1) * PolyShape(1, jj , seit(ii),0);
                     dy_dseit = dy_dseit + y_ele(aa + jj - 1) * PolyShape(1, jj , seit(ii),1);
                 end
-
-                [hx , hy] = fromPointToHi(1 , y_l, -1, 0);
                 for jj = 1 : 2
                     f_ele(pp + 1) = f_ele(pp + 1) + seit_weight(ii) * PolyShape(1, jj , seit(ii),0) * hx * dy_dseit;
                     f_ele(pp + 2) = f_ele(pp + 2) + seit_weight(ii) * PolyShape(1, jj , seit(ii),0) * hy * dy_dseit;
@@ -150,12 +149,11 @@ for ee = 1 : n_el
             end
 
             if y_ele(aa) == 1 && y_ele(aa + 1) == 1
+                [hx , hy] = fromPointToHi(1 , y_l, 0, 1);
                 for jj = 1 : 2
                     x_l      = x_l      + x_ele(aa + jj - 1) * PolyShape(1, jj , seit(ii),0);
                     dx_dseit = dx_dseit + x_ele(aa + jj - 1) * PolyShape(1, jj , seit(ii),1);
                 end
-
-                [hx , hy] = fromPointToHi(1 , y_l, 0, 1);
                 for jj = 1 : 2
                     f_ele(pp + 1) = f_ele(pp + 1) + seit_weight(ii) * PolyShape(1, jj , seit(ii),0) * hx * dy_dseit;
                     f_ele(pp + 2) = f_ele(pp + 2) + seit_weight(ii) * PolyShape(1, jj , seit(ii),0) * hy * dy_dseit;
@@ -163,12 +161,11 @@ for ee = 1 : n_el
             end
 
             if y_ele(aa) == -1 && y_ele(aa + 1) == -1
+                [hx , hy] = fromPointToHi(1 , y_l, 0, -1);
                 for jj = 1 : 2
                     x_l      = x_l      + x_ele(aa + jj - 1) * PolyShape(1, jj , seit(ii),0);
                     dx_dseit = dx_dseit + x_ele(aa + jj - 1) * PolyShape(1, jj , seit(ii),1);
                 end
-
-                [hx , hy] = fromPointToHi(1 , y_l, 0, -1);
                 for jj = 1 : 2
                     f_ele(pp + 1) = f_ele(pp + 1) + seit_weight(ii) * PolyShape(1, jj , seit(ii),0) * hx * dy_dseit;
                     f_ele(pp + 2) = f_ele(pp + 2) + seit_weight(ii) * PolyShape(1, jj , seit(ii),0) * hy * dy_dseit;
@@ -177,8 +174,6 @@ for ee = 1 : n_el
         end
     end
 
-    x_ele = x_coor( IEN(ee, 1:n_en) );
-    y_ele = y_coor( IEN(ee, 1:n_en) );
     for ll = 1 : n_int
         x_l = 0.0; y_l = 0.0;
         dx_dxi = 0.0; dx_deta = 0.0;
@@ -307,6 +302,7 @@ for ee = 1 : n_el
 
             duy_dx = duy_dx + u_ele(aa) * Na_x;
             duy_dy = duy_dy + u_ele(aa) * Na_y;
+            
             epsilong = [dux_dx dux_dy 0.5*(duy_dx+duy_dy)];
         end
 
@@ -315,49 +311,7 @@ for ee = 1 : n_el
         end
     end
 end
-
-
-node_strain = zeros(n_np, 3);
-% 计算四边形单元面积的函数
-element_area = zeros(n_el, 1);
-for ee = 1:n_el
-    x1 = x_coor(IEN(ee, 1));
-    y1 = y_coor(IEN(ee, 1));
-    x2 = x_coor(IEN(ee, 2));
-    y2 = y_coor(IEN(ee, 2));
-    x3 = x_coor(IEN(ee, 3));
-    y3 = y_coor(IEN(ee, 3));
-    x4 = x_coor(IEN(ee, 4));
-    y4 = y_coor(IEN(ee, 4));
-    area1 = 0.5 * abs((x1 - x3) * (y2 - y4)-(x2 - x4) * (y1 - y3));
-    element_area(ee) = area1;
-end
-
-% 计算节点总相关面积的函数
-for ee = 1:n_el
-    for aa = 1:n_en
-        node_index = IEN(ee, aa);
-        % 用单元面积加权
-        node_strain(node_index, :) = node_strain(node_index, :) + element_area(ee) * strain(ee, :);
-    end
-end
-% 对每个节点的应变进行平均
-for nn = 1:n_np
-    total_area = 0;
-    for ee = 1:n_el
-        if any(IEN(ee, :) == nn)
-            total_area = total_area + element_area(ee);
-        end
-    end
-    if total_area > 0
-        node_strain(nn, :) = node_strain(nn, :) / total_area;
-    end
-end
-% 初始化节点应力数组，每个节点有3个应力分量（xx, yy, xy）
-node_stress = zeros(n_np, 3);
-for nn = 1:n_np
-    node_stress(nn, :) = D * node_strain(nn, :)';
-end
+% to do
 
 figure;
 trisurf(IEN_tri, x_coor, y_coor, node_strain(:,1));
