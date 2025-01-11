@@ -4,7 +4,7 @@ miu  =  0.3; % Poisson's ratio
 E    = 1E9; % Elastic Modulus
 
 
-D = zeros(3, 3);                         % another D  
+D = zeros(3, 3);                         % another D
 D(1, 1) = E/(1-miu^2);
 D(2, 2) = D(1,1);
 D(1, 2) = E *miu/(1-miu^2);
@@ -20,10 +20,10 @@ exact_y = @(x,y) x*(1-x)*(1-2*y);
 
 f_1 = @(x,y) (2*E*y*(y - 1))/(miu^2 - 1) - (E*(miu/2 - 1/2)*((x - 1)*(y - 1) ...
     + x*y + 2*x*(x - 1) + x*(y - 1) + y*(x - 1)))/(miu^2 - 1) ...
-+ (E*miu*((x - 1)*(y - 1) + x*y + x*(y - 1) + y*(x - 1)))/(miu^2 - 1);
+    + (E*miu*((x - 1)*(y - 1) + x*y + x*(y - 1) + y*(x - 1)))/(miu^2 - 1);
 f_2 = @(x,y) (2*E*x*(x - 1))/(miu^2 - 1) - (E*(miu/2 - 1/2)*((x - 1)*(y - 1) ...
-    + x*y + x*(y - 1) + y*(x - 1) + 2*y*(y - 1)))/(miu^2 - 1) ... 
-+ (E*miu*((x - 1)*(y - 1) + x*y + x*(y - 1) + y*(x - 1)))/(miu^2 - 1);
+    + x*y + x*(y - 1) + y*(x - 1) + 2*y*(y - 1)))/(miu^2 - 1) ...
+    + (E*miu*((x - 1)*(y - 1) + x*y + x*(y - 1) + y*(x - 1)))/(miu^2 - 1);
 
 % quadrature rule
 n_int_xi  = 10;
@@ -58,13 +58,13 @@ for error_i = 1 : length(ne)
             y_coor(index) = (ny-1) * hy;
         end
     end
- 
+
     % IEN array
     IEN = zeros(n_el, n_en);
     for ex = 1 : n_el_x
         for ey = 1 : n_el_y
             ee = (ey-1) * n_el_x + ex; % element index
-    
+
             IEN(ee, 1) = (ey-1) * n_np_x + ex;
             IEN(ee, 2) = (ey-1) * n_np_x + ex + 1;
             IEN(ee, 3) =  ey    * n_np_x + ex + 1;
@@ -81,7 +81,7 @@ for error_i = 1 : length(ne)
             counter = counter + 1;
             ID(index, 1) = counter;
             counter = counter + 1;
-            ID(index, 2) = counter; 
+            ID(index, 2) = counter;
         end
     end
 
@@ -106,26 +106,26 @@ for error_i = 1 : length(ne)
     for ee = 1 : n_el
         x_ele = x_coor( IEN(ee, 1:n_en) );
         y_ele = y_coor( IEN(ee, 1:n_en) );
-  
+
         k_ele = zeros(2 * n_en, 2 * n_en); % element stiffness matrix
         f_ele = zeros(2 * n_en, 1);    % element load vector
-  
+
         for ll = 1 : n_int         %ll是积分过程中的节点
             x_l = 0.0; y_l = 0.0;
             dx_dxi = 0.0; dx_deta = 0.0;
             dy_dxi = 0.0; dy_deta = 0.0;
-                for aa = 1 : n_en
-                    x_l = x_l + x_ele(aa) * Quad(aa, xi(ll), eta(ll));
-                    y_l = y_l + y_ele(aa) * Quad(aa, xi(ll), eta(ll));    
-                    [Na_xi, Na_eta] = Quad_grad(aa, xi(ll), eta(ll));
-                    dx_dxi  = dx_dxi  + x_ele(aa) * Na_xi;
-                    dx_deta = dx_deta + x_ele(aa) * Na_eta;
-                    dy_dxi  = dy_dxi  + y_ele(aa) * Na_xi;
-                    dy_deta = dy_deta + y_ele(aa) * Na_eta;
-                end
-    
-                detJ = dx_dxi * dy_deta - dx_deta * dy_dxi;              %check
-    
+            for aa = 1 : n_en
+                x_l = x_l + x_ele(aa) * Quad(aa, xi(ll), eta(ll));
+                y_l = y_l + y_ele(aa) * Quad(aa, xi(ll), eta(ll));
+                [Na_xi, Na_eta] = Quad_grad(aa, xi(ll), eta(ll));
+                dx_dxi  = dx_dxi  + x_ele(aa) * Na_xi;
+                dx_deta = dx_deta + x_ele(aa) * Na_eta;
+                dy_dxi  = dy_dxi  + y_ele(aa) * Na_xi;
+                dy_deta = dy_deta + y_ele(aa) * Na_eta;
+            end
+
+            detJ = dx_dxi * dy_deta - dx_deta * dy_dxi;              %check
+
             for aa = 1 : n_en
                 Na = Quad(aa, xi(ll), eta(ll));
                 [Na_xi, Na_eta] = Quad_grad(aa, xi(ll), eta(ll));
@@ -137,10 +137,10 @@ for error_i = 1 : length(ne)
                 B1(2, 2) = Na_y;
                 B1(3, 2) = Na_x;
                 B1(3, 1) = Na_y;
-      
+
                 f_ele(2*(aa-1)+1) = f_ele(2*(aa-1)+1) + weight(ll) * detJ * f_1(x_l, y_l) * Na;
                 f_ele(2*(aa-1)+2) = f_ele(2*(aa-1)+2) + weight(ll) * detJ * f_2(x_l, y_l) * Na;
-      
+
                 for bb = 1 : n_en
                     Nb = Quad(bb, xi(ll), eta(ll));
                     [Nb_xi, Nb_eta] = Quad_grad(bb, xi(ll), eta(ll));
@@ -152,7 +152,7 @@ for error_i = 1 : length(ne)
                     B2(2, 2) = Nb_y;
                     B2(3, 2) = Nb_x;
                     B2(3, 1) = Nb_y;
-        
+
                     for i = 1 : 2
                         for j = 1 : 2
                             ei = unit_vector(i);
@@ -174,7 +174,7 @@ for error_i = 1 : length(ne)
                             QQ = LM{jj}(ee,bb);
                             if QQ > 0
                                 K(PP, QQ) = K(PP, QQ) + k_ele(2*(aa-1)+ii, 2*(bb-1)+jj);
-                            %else
+                                %else
 
                             end
                         end
@@ -220,39 +220,39 @@ for error_i = 1 : length(ne)
             y_l = 0.0; dy_dxi = 0.0; dy_deta = 0.0;
             u_l = 0.0; dux_dx = 0.0; dux_dy = 0.0;
             duy_dx = 0.0; duy_dy = 0.0;
-                for aa = 1 : n_en
-                    x_l     = x_l     + x_ele(aa) * Quad(aa, xi(ll), eta(ll));
-                    y_l     = y_l     + y_ele(aa) * Quad(aa, xi(ll), eta(ll));
-                    [Na_xi, Na_eta] = Quad_grad(aa, xi(ll), eta(ll));
-                    dx_dxi  = dx_dxi  + x_ele(aa) * Na_xi;
-                    dx_deta = dx_deta + x_ele(aa) * Na_eta;
-                    dy_dxi  = dy_dxi  + y_ele(aa) * Na_xi;
-                    dy_deta = dy_deta + y_ele(aa) * Na_eta;
-                end
+            for aa = 1 : n_en
+                x_l     = x_l     + x_ele(aa) * Quad(aa, xi(ll), eta(ll));
+                y_l     = y_l     + y_ele(aa) * Quad(aa, xi(ll), eta(ll));
+                [Na_xi, Na_eta] = Quad_grad(aa, xi(ll), eta(ll));
+                dx_dxi  = dx_dxi  + x_ele(aa) * Na_xi;
+                dx_deta = dx_deta + x_ele(aa) * Na_eta;
+                dy_dxi  = dy_dxi  + y_ele(aa) * Na_xi;
+                dy_deta = dy_deta + y_ele(aa) * Na_eta;
+            end
 
-                detJ   = dx_dxi * dy_deta - dx_deta * dy_dxi;
+            detJ   = dx_dxi * dy_deta - dx_deta * dy_dxi;
 
-                for aa = 1 : n_en
-                    [Na_xi, Na_eta] = Quad_grad(aa, xi(ll), eta(ll));
-                    Na = Quad(aa, xi(ll), eta(ll));
+            for aa = 1 : n_en
+                [Na_xi, Na_eta] = Quad_grad(aa, xi(ll), eta(ll));
+                Na = Quad(aa, xi(ll), eta(ll));
 
-                    Na_x = (Na_xi * dy_deta - Na_eta * dy_dxi) / detJ;
-                    Na_y = (-Na_xi * dx_deta + Na_eta * dx_dxi) / detJ;
-                    
-                    u_l = u_l + u_ele(aa) * Na;
-                    dux_dx = dux_dx + u_ele(aa) * Na_x;
-                    dux_dy = dux_dy + u_ele(aa) * Na_y;
+                Na_x = (Na_xi * dy_deta - Na_eta * dy_dxi) / detJ;
+                Na_y = (-Na_xi * dx_deta + Na_eta * dx_dxi) / detJ;
 
-                    duy_dx = duy_dx + u_ele(aa) * Na_x;
-                    duy_dy = duy_dy + u_ele(aa) * Na_y;
-                    
-                end
+                u_l = u_l + u_ele(aa) * Na;
+                dux_dx = dux_dx + u_ele(aa) * Na_x;
+                dux_dy = dux_dy + u_ele(aa) * Na_y;
 
-                eL2_error(error_i) = eL2_error(error_i) + weight(ll) * ((u_l - ...
-                    exact_at_x(x_l, y_l))^2 + (u_l - exact_at_y(x_l, y_l) )^2) * detJ;
-                eH1_error(error_i) = eH1_error(error_i) + weight(ll) * ((dux_dx ...
-                    - exact_x(x_l, y_l))^2 + (dux_dy - exact_y(x_l, y_l))^2 + ...
-                    (duy_dx - exact_x(x_l, y_l))^2 + (duy_dx - exact_x(x_l, y_l))^2) * detJ;
+                duy_dx = duy_dx + u_ele(aa) * Na_x;
+                duy_dy = duy_dy + u_ele(aa) * Na_y;
+
+            end
+
+            eL2_error(error_i) = eL2_error(error_i) + weight(ll) * ((u_l - ...
+                exact_at_x(x_l, y_l))^2 + (u_l - exact_at_y(x_l, y_l) )^2) * detJ;
+            eH1_error(error_i) = eH1_error(error_i) + weight(ll) * ((dux_dx ...
+                - exact_x(x_l, y_l))^2 + (dux_dy - exact_y(x_l, y_l))^2 + ...
+                (duy_dx - exact_x(x_l, y_l))^2 + (duy_dx - exact_x(x_l, y_l))^2) * detJ;
         end
     end
     eL2_error(error_i) = eL2_error(error_i) ^ 0.5;
@@ -270,7 +270,7 @@ plot(log(1./ne), log(eH1_error), '-b','LineWidth',3);
 
 str1 = 'eL2_error  k='+ "" + mat2str(eL2_error_Slope(1, 1));
 str2 = 'eH1_error  k='+ "" + mat2str(eH1_error_Slope(1, 1));
-% 
+%
 legend(str1,str2);
 % EOF
 
@@ -278,9 +278,9 @@ legend(str1,str2);
 
 
 function ei = unit_vector(ii)
-    if ii == 1
-        ei = [1, 0]';
-    else
-        ei = [0, 1]';
-    end
+if ii == 1
+    ei = [1, 0]';
+else
+    ei = [0, 1]';
+end
 end

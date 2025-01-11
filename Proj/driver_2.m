@@ -1,6 +1,6 @@
 clear; clc;clf;close all;
 
-run('quarter.m')
+run('quarter_30.m')
 
 miu  =  0.3; % Poisson's ratio
 E    = 1E9; % Elastic Modulus
@@ -22,38 +22,33 @@ n_g = 5;
 [seit, seit_weight] = Gauss(n_g , -1 ,1);
 
 
-n_lin = size(msh.LINES);
-n_lin = n_lin(1,1);
-x_coor = zeros(msh.nbNod, 1);
-y_coor = x_coor;
-
-for i = 1 : msh.nbNod
-    x_coor(i) = msh.POS(i,1);
-    y_coor(i) = msh.POS(i,2);
-end
+n_lin = length(msh.LINES);
+x_coor(:) = msh.POS(:,1);
+y_coor(:) = msh.POS(:,2);
 
 
 % mesh generation
 n_en   = 4;               % number of nodes in an element
-n_el   = 98;              % total number of elements
+n_el   = length(msh.QUADS); % total number of elements
 n_np   = msh.nbNod;       % total number of nodal points
-n_nd   = 7;
+n_nd   = 29;
 
 % generate the nodal coordinates
 xcoor = msh.POS(:,1);
 ycoor = msh.POS(:,2);
 
 % IEN array
-%IEN array
 IEN_tri = zeros(1,1);
 IEN = msh.QUADS(:,1:4);
+
 for ee = 1:size(IEN,1)
-IEN_tri(ee*2-1,1) = IEN(ee,1);
-IEN_tri(ee*2-1,2) = IEN(ee,2);
-IEN_tri(ee*2-1,3) = IEN(ee,3);
-IEN_tri(ee*2,1) = IEN(ee,1);
-IEN_tri(ee*2,2) = IEN(ee,3);
-IEN_tri(ee*2,3) = IEN(ee,4);
+    IEN_tri(ee*2-1,1) = IEN(ee,1);
+    IEN_tri(ee*2-1,2) = IEN(ee,2);
+    IEN_tri(ee*2-1,3) = IEN(ee,3);
+
+    IEN_tri(ee*2,1) = IEN(ee,1);
+    IEN_tri(ee*2,2) = IEN(ee,3);
+    IEN_tri(ee*2,3) = IEN(ee,4);
 end
 
 % 右边和上边条件设置
@@ -62,7 +57,7 @@ Newman    = -1;
 
 % ID array
 ID = -1 * ones(n_np, 2);
-for ii = 15 : n_lin
+for ii = 1 : n_lin
     if msh.LINES(ii , 3) == 8                 % 右边界
         ID(msh.LINES(ii,1),1) = Dirichlet;
         ID(msh.LINES(ii,1),2) = Dirichlet;
