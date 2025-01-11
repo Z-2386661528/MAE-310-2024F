@@ -312,9 +312,12 @@ for ee = 1 : n_el
     end
 end
 % to do
+% 主程序中计算应变部分
+strain = compute_strain(IEN, x_coor, y_coor, disp, xi, eta, weight, n_int, n_en);
+
 
 figure;
-trisurf(IEN_tri, x_coor, y_coor, node_strain(:,1));
+trisurf(IEN_tri, x_coor, y_coor, strain(:,1));
 axis equal;
 colormap jet
 shading interp
@@ -322,7 +325,7 @@ title("x方向应变")
 view(2);
 
 figure;
-trisurf(IEN_tri, x_coor, y_coor, node_strain(:,2));
+trisurf(IEN_tri, x_coor, y_coor, strain(:,2));
 axis equal;
 colormap jet
 shading interp
@@ -330,7 +333,7 @@ title("y方向应变")
 view(2);
 
 figure;
-trisurf(IEN_tri, x_coor, y_coor, node_stress(:,1));
+trisurf(IEN_tri, x_coor, y_coor, stress(:,1));
 axis equal;
 colormap jet
 shading interp
@@ -338,7 +341,7 @@ title("x方向应力")
 view(2);
 
 figure;
-trisurf(IEN_tri, x_coor, y_coor, node_stress(:,2));
+trisurf(IEN_tri, x_coor, y_coor, stress(:,2));
 axis equal;
 colormap jet
 shading interp
@@ -352,5 +355,52 @@ if ii == 1
     ei = [1, 0]';
 else
     ei = [0, 1]';
+end
+end
+
+% 计算单元应变
+function strain = compute_strain(IEN, x_coor, y_coor, disp, xi, eta, weight, n_int, n_en)
+strain = zeros(size(IEN, 1), 3);
+for ee = 1:size(IEN, 1)
+    x_ele = x_coor(IEN(ee, 1:n_en));
+    y_ele = y_coor(IEN(ee, 1:n_en));
+    u_ele = disp(IEN(ee, :), 1);
+
+    local_strain = zeros(n_int, 3);
+    for ll = 1:n_int
+        x_l = 0.0; dx_dxi = 0.0; dx_deta = 0.0;
+        y_l = 0.0; dy_dxi = 0.0; dy_deta = 0.0;
+        u_l = 0.0; dux_dx = 0.0; dux_dy = 0.0;
+        duy_dx = 0.0; duy_dy = 0.0;
+        for aa = 1:n_en
+            x_l     = x_l     + x_ele(aa) * Quad(aa, xi(ll), eta(ll));
+            y_l     = y_l     + y_ele(aa) * Quad(aa, xi(ll), eta(ll));
+            [Na_xi, Na_eta] = Quad_grad(aa, xi(ll), eta(ll));
+            dx_dxi  = dx_dxi  + x_ele(aa) * Na_xi;
+            dx_deta = dx_deta + x_ele(aa) * Na_eta;
+            dy_dxi  = dy_dxi  + y_ele(aa) * Na_xi;
+            dy_deta = dy_deta + y_ele(aa) * Na_eta;
+        end
+
+        detJ   = dx_dxi * dy_deta - dx_deta * dy_dxi;
+
+        for aa = 1:n_en
+            [Na_xi, Na_eta] = Quad_grad(aa, xi(ll), eta(ll));
+            Na = Quad(aa, xi(ll), eta(ll));
+
+            Na_x = (Na_xi * dy_deta - Na_eta * dy_dxi) / detJ;
+            Na_y = (-Na_xi * dx_deta + Na_eta * dx_dxi) / detJ;
+            u_l = u_l + u_ele(aa) * Na;
+            dux_dx = dux_dx + u_ele(aa) * Na_x;
+            dux_dy = dux_dy + u_ele(aa) * Na_y;
+
+            duy_dx = duy_dx + u_ele(aa) * Na_x;
+            duy_dy = duy_dy + u_ele(aa) * Na_y;
+
+            local_strain(ll, :) = [dux_dx dux_dy 0.5*(duy_dx+duy_dy)];
+        end
+    end
+
+    strain(ee, :) = sum(local_strain, 1) / n_int;
 end
 end
