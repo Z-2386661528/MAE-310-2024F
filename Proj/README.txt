@@ -1,0 +1,4 @@
+driver1为第一题的主程序，Error1是计算第一题的误差，driver2为第二题的代码，driver3为第三题的代码
+quarter_30.m是一条边上有30个点的网格文件
+quarter_80.m是一条边上有80个点的网格文件
+fromPointToHi为给点坐标计算边上的hi文件
