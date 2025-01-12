@@ -231,7 +231,7 @@ for n_nsd = 1 : 2
     end
 end
 
-trisurf(IEN_tri, x_coor, y_coor, disp(:,1));
+trisurf(IEN_tri, x_coor+1, y_coor+1, disp(:,1));
 axis equal;
 colormap jet
 shading interp
@@ -239,7 +239,7 @@ title("x方向位移")
 view(2);
 
 figure;
-trisurf(IEN_tri, x_coor, y_coor, disp(:,2));
+trisurf(IEN_tri, x_coor+1, y_coor+1, disp(:,2));
 axis equal;
 colormap jet
 shading interp
@@ -309,7 +309,7 @@ stress = D*strain';
 
 for ii = 1 : 3
     figure;
-    trisurf(IEN_tri, x_coor, y_coor, strain(:,ii));
+    trisurf(IEN_tri, x_coor+1, y_coor+1, strain(:,ii));
     axis equal;
     colormap jet
     shading interp
@@ -323,7 +323,7 @@ for ii = 1 : 3
     view(2);
 
     figure;
-    trisurf(IEN_tri, x_coor, y_coor, stress(ii,:));
+    trisurf(IEN_tri, x_coor+1, y_coor+1, stress(ii,:));
     axis equal;
     colormap jet
     shading interp
