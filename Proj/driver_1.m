@@ -190,9 +190,9 @@ end
 
 close all;
 [X, Y] = meshgrid(0 : hx : 1, 0 : hy : 1);
-Z = reshape(disp(:,2), n_np_x, n_np_y)';
+Z = reshape(disp(:,1), n_np_x, n_np_y)';
 surf(X, Y, Z);
-
+title("y方向位移")
 shading interp;
 
 % EOF
